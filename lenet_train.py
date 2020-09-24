@@ -9,21 +9,41 @@ import presets as ps
 
 
 cp = ps.Preset(1)
+"""
+    모델별로 다르게 트레이닝 할 것
+        - Batch Size (int)
+        - Activation Function (string, default=relu)
+        - Weight Initialization Type (string, none="none")
+        - Optimizer (string, default=adam)
+        - (Start) Learning Rate (float, default=0.001)
+        - Epoch (int, default=200)
+        - Dropout (float, none=0.0)
+        - Weight Decay (float, none=?)
+        - Data Augmentation (bool, default=False)
+        - Learning Rate Decay (string, none="none")
+"""
+tf.flags.DEFINE_integer("batch_size", 128, "Batch Size (default: 64)")
+tf.flags.DEFINE_string("activation_function", 'relu', "Activation Function(default: ReLU)")
+tf.flags.DEFINE_string("weight_initialization", 'none', "Weigh Initialization")
+tf.flags.DEFINE_string("optimizer", 'adam', '')
+tf.flags.DEFINE_float("starter_learning_rate", cp.learning_rate, "Start Learning Rate (default=0.001)")
+tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
+tf.flags.DEFINE_float("dropout", 0.0, "1 - keep_prob")
+# tf.flags.DEFINE_float("keep_prob", 0.9, "keep probability for dropout (default: 1.0)")
+tf.flags.DEFINE_float("weight_decay", 0.0, '')
+tf.flags.DEFINE_boolean("data_augmentation", True, "data augmentation option")
+tf.flags.DEFINE_string("learning_rate_decay", "none", "ll")
+tf.flags.DEFINE_float("learning_rate_decay_rate", 0.99, "")
 
 # Model Hyperparameters
-tf.flags.DEFINE_float("lr", cp.learning_rate, "learning rate (default=0.1)")
 tf.flags.DEFINE_float("lr_decay", 0.99, "learning rate decay rate(default=0.1)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0001, "L2 regularization lambda (default: 0.0)")
-tf.flags.DEFINE_float("keep_prob", 0.9, "keep probability for dropout (default: 1.0)")
 tf.flags.DEFINE_integer("num_classes", 10, "The number of classes (default: 10)")
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 128, "Batch Size (default: 64)")
-tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
 tf.flags.DEFINE_integer("evaluate_every", 350, "Evaluate model on dev set after this many steps (default: 100)")
 tf.flags.DEFINE_integer("checkpoint_every", 350, "Save model after this many steps (default: 100)")
 tf.flags.DEFINE_integer("num_checkpoints", 3, "Number of checkpoints to store (default: 5)")
-tf.flags.DEFINE_boolean("data_augmentation", True, "data augmentation option")
 
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -43,10 +63,14 @@ with tf.Graph().as_default():
         # Define Training procedure
 
         # * hint learning rate decay를 위한 operation을 통해 감쇠된 learning rate를 optimizer에 적용
-        global_step = tf.Variable(0, name="global_step", trainable=False) # iteration 수
-        decay_computed_learning_rate = tf.train.exponential_decay(starter_learning_rate=FLAGS.lr, global_step=global_step, decay_steps=100000, decay_rate=0.96, staircase=True)
+        learning_rate = FLAGS.starter_learning_rate
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=decay_computed_learning_rate) #Optimizer
+        if FLAGS.learning_rate_decay_type != "None":
+            global_step = tf.Variable(0, name="global_step", trainable=False)  # iteration 수
+            if FLAGS.learning_rate_decay_type == "exponential":
+                learning_rate = tf.train.exponential_decay(learning_rate=learning_rate, global_step=global_step, decay_steps=100000, decay_rate=0.96, staircase=True)
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate) #Optimizer
         grads_and_vars = optimizer.compute_gradients(lenet.loss) # gradient 계산
         train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step) # back-propagation
 
