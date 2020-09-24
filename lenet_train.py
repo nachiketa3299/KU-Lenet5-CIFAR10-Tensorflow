@@ -41,11 +41,12 @@ with tf.Graph().as_default():
         lenet = LeNet(FLAGS) #LeNet 클래스의 인스턴스 생성 후 Hyperparameter가 정의돼 있는 FLAGS로 초기화
 
         # Define Training procedure
-        global_step = tf.Variable(0, name="global_step", trainable=False) # iteration 수
 
         # * hint learning rate decay를 위한 operation을 통해 감쇠된 learning rate를 optimizer에 적용
+        global_step = tf.Variable(0, name="global_step", trainable=False) # iteration 수
+        decay_computed_learning_rate = tf.train.exponential_decay(starter_learning_rate=FLAGS.lr, global_step=global_step, decay_steps=100000, decay_rate=0.96, staircase=True)
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.lr) #Optimizer
+        optimizer = tf.train.AdamOptimizer(learning_rate=decay_computed_learning_rate) #Optimizer
         grads_and_vars = optimizer.compute_gradients(lenet.loss) # gradient 계산
         train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step) # back-propagation
 
