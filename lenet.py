@@ -36,26 +36,25 @@ class LeNet:
         #  TODO : LeNet5 모델 생성
         # Input으로 들어올 데이터 사이즈 (32, 32, 3)
         # LAYER 1: (32, 32, 3) -> (28 * 28 * 6) | filter = (5 * 5 * 3) * 6
-        # * hint he initialization: stddev = sqrt(2/n), filter에서 n 값은?
-        self.n = 3
-        self.W1 = tf.Variable(tf.random_normal([5, 5, 3, 6], stddev=math.sqrt(2/self.n)), name='W1')
-        self.L1 = tf.nn.conv2d(self.X, self.W1, strides=[1, 1, 1, 1], padding='SAME')
+        # * hint he initialization: stddev = sqrt(2/n), filter에서 n 값은 이전 레이어의 노드 수.
+        self.conv_f1 = tf.Variable(tf.random_normal([5, 5, 3, 6], stddev=math.sqrt(2 / (32 * 32 * 3))), name='conv_f1')
+        self.C1 = tf.nn.conv2d(self.X, self.conv_f1, strides=[1, 1, 1, 1], padding='SAME')
 
         # LAYER 2: (28 * 28 * 6) -> ReLu -> (28 * 28 * 6) -> max_pooling(2*2, stride=2) -> (14 * 14 * 6)
-        self.L2 = tf.nn.max_pool(tf.nn.relu(self.L1), ksize=[1,2,2,1], strides=[1, 2, 2, 1], padding='SAME')
+        self.S2 = tf.nn.max_pool(tf.nn.relu(self.C1), ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
         # LAYER 3: (14 * 14 * 6) -> (10 * 10 * 16) | filter = (5 * 5 * 6) * 16
-        self.W2 = tf.Variable(tf.random_normal([5, 5, 6, 16], stddev=math.sqrt(2/self.n)), name='W2')
-        self.L3 = tf.nn.conv2d(self.L2, self.W2, strides=[1, 1, 1, 1], padding='SAME')
+        self.conv_f2 = tf.Variable(tf.random_normal([5, 5, 6, 16], stddev=math.sqrt(2 / (14 * 14 * 6))), name='conv_f2')
+        self.C3 = tf.nn.conv2d(self.S2, self.conv_f2, strides=[1, 1, 1, 1], padding='SAME')
 
         # LAYER 4: (10 * 10 * 16) -> ReLu -> (10 * 10 * 16) -> max_pooling(2*2, stride=2) -> (5, 5, 16)
-        self.L4 = tf.nn.max_pool(tf.nn.relu(self.L3), ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+        self.S4 = tf.nn.max_pool(tf.nn.relu(self.C3), ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
         # 평탄화 -> (5 * 5 *16)
 
         # LAYER 5(FC1): (5, 5, 16) -> (5 * 5 * 16 = 400) | (batch_size, 400) * (400, 120) -> (batch_size, 120)
         # FC1 추가 (5 * 5 * 16, 120) -> (120)
-        self.FC1 = tf.reshape(self.L4, [-1, 5, 5, 16], name="FC1")
-        self.FCW1 = tf.get_variable("FCW1", shape=[400, 120])
+        self.FC1 = tf.reshape(self.S4, [config.batch_size, 5, 5, 16], name="FC1")
+        self.FCW1 = tf.get_variable("FCW1", shape=[5 * 5 * 16, 120])
         self.FCB1 = tf.Variable(tf.random_normal([120]), name="FCB1")
 
         # LAYER 6(FC2): (batch_size, 120) * (120, 84) -> (batch_size, 84)
@@ -70,7 +69,7 @@ class LeNet:
         hypothesis = tf.nn.softmax(tf.nn.xw_plus_b(self.FC3, self.FCW3, self.FCB3, name="hypothesis"))
 
         with tf.variable_scope('logit'):
-          self.predictions = tf.argmax(hypothesis, 1, name="predictions")
+          self.predictions = tf.argmax(hypothesis, 1, name="predictions") # logit/hypothesis
 
         with tf.variable_scope('loss'):
           costs = []

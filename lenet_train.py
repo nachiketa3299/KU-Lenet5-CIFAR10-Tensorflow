@@ -5,9 +5,13 @@ import datetime
 from tensorflow.keras.datasets.cifar10 import load_data
 import data_helpers as dh
 from lenet import LeNet
+import presets as ps
+
+
+cp = ps.Preset(1)
 
 # Model Hyperparameters
-tf.flags.DEFINE_float("lr", 0.001, "learning rate (default=0.1)")
+tf.flags.DEFINE_float("lr", cp.learning_rate, "learning rate (default=0.1)")
 tf.flags.DEFINE_float("lr_decay", 0.99, "learning rate decay rate(default=0.1)")
 tf.flags.DEFINE_float("l2_reg_lambda", 0.0001, "L2 regularization lambda (default: 0.0)")
 tf.flags.DEFINE_float("keep_prob", 0.9, "keep probability for dropout (default: 1.0)")
@@ -73,10 +77,10 @@ with tf.Graph().as_default():
 
         sess.run(tf.global_variables_initializer()) # 모든 가중치 초기화
 
-        def train_step(x_batch, y_batch):
+        def train_step(_x_batch, _y_batch):
             feed_dict = {
-              lenet.X: x_batch,
-              lenet.Y: y_batch,
+              lenet.X: _x_batch,
+              lenet.Y: _y_batch,
               lenet.keep_prob: FLAGS.keep_prob
             }
             _, step, summaries, loss, accuracy = sess.run(
@@ -86,13 +90,13 @@ with tf.Graph().as_default():
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
 
-        def dev_step(x_batch, y_batch, writer=None):
+        def dev_step(_x_batch, _y_batch, writer=None):
             """
             Evaluates model on a dev set
             """
             feed_dict = {
-              lenet.X: x_batch,
-              lenet.Y: y_batch,
+              lenet.X: _x_batch,
+              lenet.Y: _y_batch,
               lenet.keep_prob: 1.0
             }
             step, summaries, loss, accuracy = sess.run(
