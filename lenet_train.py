@@ -32,7 +32,8 @@ tf.flags.DEFINE_float("dropout", 0.0, "1 - keep_prob")
 # tf.flags.DEFINE_float("keep_prob", 0.9, "keep probability for dropout (default: 1.0)")
 tf.flags.DEFINE_float("weight_decay", 0.0, '')
 tf.flags.DEFINE_boolean("data_augmentation", True, "data augmentation option")
-tf.flags.DEFINE_float("learning_rate_decay", 0.99, "")
+tf.flags.DEFINE_float("learning_rate_decay_rate", 0.99, "")
+tf.flags.DEFINE_integer("learning_rate_decay_step", 100000, "")
 
 # Model Hyperparameters
 tf.flags.DEFINE_float("lr_decay", 0.99, "learning rate decay rate(default=0.1)")
@@ -60,16 +61,16 @@ with tf.Graph().as_default():
         lenet = LeNet(FLAGS) #LeNet 클래스의 인스턴스 생성 후 Hyperparameter가 정의돼 있는 FLAGS로 초기화
 
         # Define Training procedure
-
         # * hint learning rate decay를 위한 operation을 통해 감쇠된 learning rate를 optimizer에 적용
         learning_rate = FLAGS.starter_learning_rate # Learning rate decay가 적용되지 않는다면 Starter learning rate값이 그대로 전달됨
         if FLAGS.learning_rate_decay != 1:
             global_step = tf.Variable(0, name="global_step", trainable=False)  # iteration 수
+            learning_rate =  learning_rate * FLAGS.learning_rate_decay_rate ** (global_step/FLAGS.learning_rate_decay_step)
             learning_rate = tf.train.exponential_decay(
                 learning_rate=learning_rate, # base learning rate
                 global_step=global_step, # current index into the dataset
-                decay_steps=100000, # train size
-                decay_rate=FLAGS.learning_rate_decay, # decay rate
+                decay_steps=FLAGS.learning_rate_decay_step, # train size
+                decay_rate=FLAGS.learning_rate_decay_rate, # decay rate
                 staircase=True)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate) #Optimizer
@@ -79,7 +80,7 @@ with tf.Graph().as_default():
         # Output directory for models and summaries
         timestamp = str(int(time.time()))
         out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
-        print("Writing to {}\n".format(out_dir))
+        print(f"Writing to {out_dir}\n")
 
         # Summaries for loss and accuracy
         loss_summary = tf.summary.scalar("loss", lenet.loss)
@@ -107,9 +108,10 @@ with tf.Graph().as_default():
         def train_step(_x_batch, _y_batch):
             feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: FLAGS.keep_prob}
             # * hint learning rate decay operation 실행
-            _, step, summaries, loss, accuracy = sess.run([train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy], feed_dict)
+            _, step, summaries, loss, accuracy, learning_rate_dc = sess.run([train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy, learning_rate], feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+            # print(f"{time_str}: step {step}, loss {loss}, acc {:g}".format(time_str, step, loss, accuracy))
+            print(f"{time_str}: step {step}, dc_lr {learning_rate_dc}, loss {loss}, acc {accuracy}")
             train_summary_writer.add_summary(summaries, step)
 
         def dev_step(_x_batch, _y_batch, writer=None):
@@ -119,7 +121,8 @@ with tf.Graph().as_default():
             feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: 1.0}
             step, summaries, loss, accuracy = sess.run([global_step, dev_summary_op, lenet.loss, lenet.accuracy], feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+            print(f"{time_str}: step {step}, loss {loss}, acc {accuracy}")
+            # print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
                 writer.add_summary(summaries, step)
             return accuracy
@@ -144,7 +147,7 @@ with tf.Graph().as_default():
                 if accuracy > max: # validation accuracy가 경신될 때
                     max = accuracy
                     path = saver.save(sess, checkpoint_prefix, global_step=current_step) # best accuracy에 도달할 때만 모델을 저장함으로써 early stopping
-                    print("Saved model checkpoint to {}\n".format(path))
+                    print(f"Saved model checkpoint to {path}\n")
         training_time = (time.time() - start_time) / 60
-        print('training time: ', training_time)
+        print(f'training time: {training_time}')
 
