@@ -32,8 +32,7 @@ tf.flags.DEFINE_float("dropout", 0.0, "1 - keep_prob")
 # tf.flags.DEFINE_float("keep_prob", 0.9, "keep probability for dropout (default: 1.0)")
 tf.flags.DEFINE_float("weight_decay", 0.0, '')
 tf.flags.DEFINE_boolean("data_augmentation", True, "data augmentation option")
-tf.flags.DEFINE_string("learning_rate_decay", "none", "ll")
-tf.flags.DEFINE_float("learning_rate_decay_rate", 0.99, "")
+tf.flags.DEFINE_float("learning_rate_decay", 0.99, "")
 
 # Model Hyperparameters
 tf.flags.DEFINE_float("lr_decay", 0.99, "learning rate decay rate(default=0.1)")
@@ -63,12 +62,15 @@ with tf.Graph().as_default():
         # Define Training procedure
 
         # * hint learning rate decay를 위한 operation을 통해 감쇠된 learning rate를 optimizer에 적용
-        learning_rate = FLAGS.starter_learning_rate
-
-        if FLAGS.learning_rate_decay_type != "None":
+        learning_rate = FLAGS.starter_learning_rate # Learning rate decay가 적용되지 않는다면 Starter learning rate값이 그대로 전달됨
+        if FLAGS.learning_rate_decay != 1:
             global_step = tf.Variable(0, name="global_step", trainable=False)  # iteration 수
-            if FLAGS.learning_rate_decay_type == "exponential":
-                learning_rate = tf.train.exponential_decay(learning_rate=learning_rate, global_step=global_step, decay_steps=100000, decay_rate=0.96, staircase=True)
+            learning_rate = tf.train.exponential_decay(
+                learning_rate=learning_rate, # base learning rate
+                global_step=global_step, # current index into the dataset
+                decay_steps=100000, # train size
+                decay_rate=FLAGS.learning_rate_decay, # decay rate
+                staircase=True)
 
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate) #Optimizer
         grads_and_vars = optimizer.compute_gradients(lenet.loss) # gradient 계산
@@ -103,14 +105,9 @@ with tf.Graph().as_default():
         sess.run(tf.global_variables_initializer()) # 모든 가중치 초기화
 
         def train_step(_x_batch, _y_batch):
-            feed_dict = {
-              lenet.X: _x_batch,
-              lenet.Y: _y_batch,
-              lenet.keep_prob: FLAGS.keep_prob
-            }
-            _, step, summaries, loss, accuracy = sess.run(
-                [train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy],
-                feed_dict) # * hint learning rate decay operation 실행
+            feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: FLAGS.keep_prob}
+            # * hint learning rate decay operation 실행
+            _, step, summaries, loss, accuracy = sess.run([train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy], feed_dict)
             time_str = datetime.datetime.now().isoformat()
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
@@ -119,14 +116,8 @@ with tf.Graph().as_default():
             """
             Evaluates model on a dev set
             """
-            feed_dict = {
-              lenet.X: _x_batch,
-              lenet.Y: _y_batch,
-              lenet.keep_prob: 1.0
-            }
-            step, summaries, loss, accuracy = sess.run(
-                [global_step, dev_summary_op, lenet.loss, lenet.accuracy],
-                feed_dict)
+            feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: 1.0}
+            step, summaries, loss, accuracy = sess.run([global_step, dev_summary_op, lenet.loss, lenet.accuracy], feed_dict)
             time_str = datetime.datetime.now().isoformat()
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
@@ -138,6 +129,7 @@ with tf.Graph().as_default():
             batches = dh.batch_iter_aug(x_train, y_train, FLAGS.batch_size, FLAGS.num_epochs)
         else:
             batches = dh.batch_iter(x_train, y_train, FLAGS.batch_size, FLAGS.num_epochs)
+
         # Training loop. For each batch...
         max = 0
         start_time = time.time()
