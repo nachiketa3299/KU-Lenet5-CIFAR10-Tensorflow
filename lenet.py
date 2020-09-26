@@ -33,36 +33,42 @@ class LeNet:
         self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
 
         # Weight Initialization
-        self.initializer = None
+        # self.initializer = None
+        # stddev_fun = None
+        # if config.weight_initialization == 'xe':
+        #     stddev_fun = lambda n : math.sqrt(1 / n)
+        #
+        # elif config.weight_initialization == 'he':
+        #     stddev_fun = lambda n : math.sqrt(2 / n) # n is filter size * filter size * out channel
+        # else:
+        #     self.initializer = tf.random_normal_initializer(stddev=config.weight_initialization)
+        #
+        # if config.weight_initialization == 'xe' or config.weight_initialization == 'he':
+        #     self.initializer = []
+        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(32 * 32 * 3)))
+        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(14 * 14 * 6)))
+        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(5 * 5 * 16)))
+        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(120)))
+        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(84)))
+        # else:
+        #     self.conv_f1 = tf.get_variable(name='conv_f1', shape=[5, 5, 3, 6], initializer=self.initializer)
+        #     self.conv_f2 = tf.get_variable(name='conv_f2', shape=[5, 5, 6, 16], initializer=self.initializer)
+        #     self.FCW1 = tf.get_variable(name="FCW1", shape=[5 * 5 * 16, 120], initializer=self.initializer)
+        #     self.FCW2 = tf.get_variable(name="FCW2", shape=[120, 84], initializer=self.initializer)
+        #     self.FCW3 = tf.get_variable(name="FCW3", shape=[84, 10], initializer=self.initializer)
+        init = None
         if config.weight_initialization == 'xe':
-            self.initializer = []
-            self.initializer.append(tf.random_normal_initializer(stddev=1 / math.sqrt(32 * 32 * 3)))
-            self.initializer.append(tf.random_normal_initializer(stddev=1 / math.sqrt(14 * 14 * 6)))
-            self.initializer.append(tf.random_normal_initializer(stddev=1 / math.sqrt(5 * 5 * 16)))
-            self.initializer.append(tf.random_normal_initializer(stddev=1 / math.sqrt(120)))
-            self.initializer.append(tf.random_normal_initializer(stddev=1 / math.sqrt(84)))
+            init = tf.contrib.layers.xavier_initilizer()
         elif config.weight_initialization == 'he':
-            self.initializer = []
-            self.initializer.append(tf.random_normal_initializer(stddev=math.sqrt(2 / (32 * 32 * 3))))
-            self.initializer.append(tf.random_normal_initializer(stddev=math.sqrt(2 / (14 * 14 * 6))))
-            self.initializer.append(tf.random_normal_initializer(stddev=math.sqrt(2 / (5 * 5 * 16))))
-            self.initializer.append(tf.random_normal_initializer(stddev=math.sqrt(2 / 120)))
-            self.initializer.append(tf.random_normal_initializer(stddev=math.sqrt(2 / 84)))
+            init = tf.contrib.layers.variance_scaling_initializer()
         else:
-            self.initializer = tf.random_normal_initializer(stddev=config.weight_initialization)
+            init = tf.random_normal_initializer(stddev=config.weight_initialization)
 
-        if config.weight_initialization == 'xe' or config.weight_initialization == 'he':
-            self.conv_f1 = tf.get_variable(name='conv_f1', shape=[5, 5, 3, 6], initializer=self.initializer.pop(0))
-            self.conv_f2 = tf.get_variable(name='conv_f2', shape=[5, 5, 6, 16], initializer=self.initializer.pop(0))
-            self.FCW1 = tf.get_variable(name="FCW1", shape=[5 * 5 * 16, 120], initializer=self.initializer.pop(0))
-            self.FCW2 = tf.get_variable(name="FCW2", shape=[120, 84], initializer=self.initializer.pop(0))
-            self.FCW3 = tf.get_variable(name="FCW3", shape=[84, 10], initializer=self.initializer.pop(0))
-        else:
-            self.conv_f1 = tf.get_variable(name='conv_f1', shape=[5, 5, 3, 6], initializer=self.initializer)
-            self.conv_f2 = tf.get_variable(name='conv_f2', shape=[5, 5, 6, 16], initializer=self.initializer)
-            self.FCW1 = tf.get_variable(name="FCW1", shape=[5 * 5 * 16, 120], initializer=self.initializer)
-            self.FCW2 = tf.get_variable(name="FCW2", shape=[120, 84], initializer=self.initializer)
-            self.FCW3 = tf.get_variable(name="FCW3", shape=[84, 10], initializer=self.initializer)
+        self.conv_f1 = tf.get_variable(name='conv_f1', shape=[5, 5, 3, 6], initializer=init)
+        self.conv_f2 = tf.get_variable(name='conv_f2', shape=[5, 5, 6, 16], initializer=init)
+        self.FCW1 = tf.get_variable(name="FCW1", shape=[5 * 5 * 16, 120], initializer=init)
+        self.FCW2 = tf.get_variable(name="FCW2", shape=[120, 84], initializer=init)
+        self.FCW3 = tf.get_variable(name="FCW3", shape=[84, 10], initializer=init)
         self.FCB1 = tf.Variable(tf.random_normal([120]), name="FCB1")
         self.FCB2 = tf.Variable(tf.random_normal([84]), name="FCB2")
         self.FCB3 = tf.Variable(tf.random_normal([10]), name="FCB3")

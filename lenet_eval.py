@@ -44,5 +44,4 @@ for filename in filenames:
             file.write(f'{filename}\t{test_accuracy}\n')
             print('- Timestamp        : ', filename)
             print('- Test Max Accuracy: ', test_accuracy)
-    sess.close()
 file.close()

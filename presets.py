@@ -28,13 +28,13 @@ class Preset:
             self.learning_rate_decay_step = _lr_decay_s
 
         if preset_num == 1:
-            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.1, 0.0, False, 1.0, 0)
+            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0, False, 1.0, 0)
         elif preset_num == 2:
-            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.1, 0.0001, False, 1.0, 0)
+            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, False, 1.0, 0)
         elif preset_num == 3:
-            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.1, 0.0001, True, 1.0, 0)
+            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, True, 1.0, 0)
         elif preset_num == 4:
-            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.1, 0.0001, True, 0.96, 5000)
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.96, 5000)
 
 
 

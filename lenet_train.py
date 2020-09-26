@@ -15,7 +15,7 @@ def del_all_flags(_FLAGS):
         _FLAGS.__delattr__(keys)
 
 
-presets = [3, 4]
+presets = [1, 2, 3, 4]
 for preset in presets:
     p = Preset(preset)
     del_all_flags(tf.flags.FLAGS)

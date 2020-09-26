@@ -1,5 +1,5 @@
-batch_size	activation_function	weight__initialization	optimizer	starter_learning_rate	num_epochs	keep_prob	l2_reg_lambda	data_augmentation	learning_rate_decay_rate	learning_rate_decay_step	training_time	early_stopping_epoch		accuracy	timestamp
-128	relu	0.01	adam	0.001	100	0.1	0.0	False	1.0	0	29.485968124866485	29400	1601085669
-128	relu	0.01	adam	0.001	100	0.1	0.0001	False	1.0	0	28.49156259695689	31150	1601088232
-128	relu	0.01	adam	0.001	100	0.1	0.0001	True	1.0	0	35.80384246110916	1050	1601090325
-128	relu	he	adam	0.001	100	0.1	0.0001	True	0.96	5000	39.24269887606303	34650	1601092481
+batch_size	activation_function	weight__initialization	optimizer	starter_learning_rate	num_epochs	keep_prob	l2_reg_lambda	data_augmentation	learning_rate_decay_rate	learning_rate_decay_step	training_time	early_stopping_epoch	accuracy	timstamp
+128	relu	0.01	adam	0.001	100	0.9	0.0	False	1.0	0	34.09670598506928	33250	0.5788000226020813	1601127452
+128	relu	0.01	adam	0.001	100	0.9	0.0001	False	1.0	0	33.09599237839381	30100	0.6015999913215637	1601129504
+128	relu	0.01	adam	0.001	100	0.9	0.0001	True	1.0	0	37.37066901922226	35000	0.6480000019073486	1601131496
+128	relu	he	adam	0.001	100	0.9	0.0001	True	0.96	5000	38.969384002685544	28700	0.6478000283241272	1601133755
