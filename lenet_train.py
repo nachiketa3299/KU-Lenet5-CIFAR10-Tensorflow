@@ -151,6 +151,7 @@ for preset in presets:
                     print("")
                     if accuracy > max: # validation accuracy가 경신될 때
                         max = accuracy
+                        early_stopping_epoch = current_step
                         path = saver.save(sess, checkpoint_prefix, global_step=current_step) # best accuracy에 도달할 때만 모델을 저장함으로써 early stopping
                         print(f"> Saved model checkpoint to {path}\n")
             training_time = (time.time() - start_time) / 60
@@ -158,8 +159,8 @@ for preset in presets:
             filename ='./INFOS/train_result.txt'
             with open(filename, 'a') as file:
                 if os.path.getsize(filename) == 0:
-                    file.write("batch_size\tactivation_function\tweight__initialization\toptimizer\tstarter_learning_rate\tnum_epochs\tkeep_prob\tl2_reg_lambda\tdata_augmentation\tlearning_rate_decay_rate\tlearning_rate_decay_step")
-                file.write(f"{p.batch_size}\t{p.activation_function}\t{p.weight_initialization}\t{p.optimizer}\t{p.starter_learning_rate}\t{p.num_epochs}\t{p.keep_prob}\t{p.l2_reg_lambda}\t{p.data_augmentation}\t{p.learning_rate_decay_rate}\t{p.learning_rate_decay_step}")
+                    file.write("batch_size\tactivation_function\tweight__initialization\toptimizer\tstarter_learning_rate\tnum_epochs\tkeep_prob\tl2_reg_lambda\tdata_augmentation\tlearning_rate_decay_rate\tlearning_rate_decay_step\ttraining_time\tearly_stopping_epoch\taccuracy")
+                file.write(f"{p.batch_size}\t{p.activation_function}\t{p.weight_initialization}\t{p.optimizer}\t{p.starter_learning_rate}\t{p.num_epochs}\t{p.keep_prob}\t{p.l2_reg_lambda}\t{p.data_augmentation}\t{p.learning_rate_decay_rate}\t{p.learning_rate_decay_step}\t{training_time}\t{early_stopping_epoch}")
 
 
 
