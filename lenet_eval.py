@@ -10,12 +10,13 @@ def del_all_flags(_FLAGS):
     for keys in keys_list:
         _FLAGS.__delattr__(keys)
 
-(x_train_val, y_train_val), (x_test, y_test) = load_data()
 
 filenames = os.listdir(os.path.join(os.path.curdir, 'runs'))
+# filenames = [filenames[2]]
 
 file = open('./INFOS/log_eval.txt', 'w')
 for filename in filenames:
+    (x_train_val, y_train_val), (x_test, y_test) = load_data()
     # Eval Parameters
     del_all_flags(tf.flags.FLAGS)
     tf.reset_default_graph()

@@ -35,6 +35,10 @@ class Preset:
             setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, True, 1.0, 0)
         elif preset_num == 4:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.96, 5000)
+        elif preset_num == 5:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.98, 5000)
+        elif preset_num == 6:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.94, 5000)
 
 
 
