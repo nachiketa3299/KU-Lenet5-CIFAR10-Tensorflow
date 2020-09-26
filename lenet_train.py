@@ -100,8 +100,8 @@ for preset in presets:
 
             def train_step(_x_batch, _y_batch):
 
-                filename = f"./INFOS/log_train.txt"
-                file = open(filename, 'a')
+                # filename = f"./INFOS/log_train.txt"
+                # file = open(filename, 'a')
 
                 feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: FLAGS.keep_prob}
                 # * hint learning rate decay operation 실행
@@ -114,7 +114,7 @@ for preset in presets:
                 time_str = datetime.datetime.now().strftime("%m/%d %H:%M:%S")
                 prog = FLAGS.num_epochs * math.ceil(45000/FLAGS.batch_size)
                 print(f"Preset={preset}  [{time_str}]  Step=({format(step, '05')}/{format(prog, '05')})  Loss={format(loss, '<8g')}  Acc={format(accuracy, '<9g')}  LR={format(learning_rate_dc, '<21g')}")
-                file.write(f"{preset}  {time_str}  {format(step, '05')}/{format(prog, '05')}  {format(loss, '<8g')}  {format(accuracy, '<9g')}  {format(learning_rate_dc, '<21g')}")
+                # file.write(f"{preset}  {time_str}  {format(step, '05')}/{format(prog, '05')}  {format(loss, '<8g')}  {format(accuracy, '<9g')}  {format(learning_rate_dc, '<21g')}")
                 train_summary_writer.add_summary(summaries, step)
                 file.close()
 
