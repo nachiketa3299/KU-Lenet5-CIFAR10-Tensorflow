@@ -8,10 +8,18 @@ from lenet import LeNet
 from presets import Preset
 import math
 
+def del_all_flags(_FLAGS):
+    flags_dict = _FLAGS._flags()
+    keys_list = [keys for keys in flags_dict]
+    for keys in keys_list:
+        _FLAGS.__delattr__(keys)
 
-presets = [1, 2, 3, 4]
+
+presets = [3, 4]
 for preset in presets:
     p = Preset(preset)
+    del_all_flags(tf.flags.FLAGS)
+    tf.reset_default_graph()
 
     tf.flags.DEFINE_integer("batch_size", p.batch_size, "Batch Size (default: 64)")
     tf.flags.DEFINE_string("activation_function", p.activation_function, "Activation Function(default: ReLU)")
@@ -159,8 +167,8 @@ for preset in presets:
             filename ='./INFOS/train_result.txt'
             with open(filename, 'a') as file:
                 if os.path.getsize(filename) == 0:
-                    file.write("batch_size\tactivation_function\tweight__initialization\toptimizer\tstarter_learning_rate\tnum_epochs\tkeep_prob\tl2_reg_lambda\tdata_augmentation\tlearning_rate_decay_rate\tlearning_rate_decay_step\ttraining_time\tearly_stopping_epoch\taccuracy")
-                file.write(f"{p.batch_size}\t{p.activation_function}\t{p.weight_initialization}\t{p.optimizer}\t{p.starter_learning_rate}\t{p.num_epochs}\t{p.keep_prob}\t{p.l2_reg_lambda}\t{p.data_augmentation}\t{p.learning_rate_decay_rate}\t{p.learning_rate_decay_step}\t{training_time}\t{early_stopping_epoch}")
+                    file.write("batch_size\tactivation_function\tweight__initialization\toptimizer\tstarter_learning_rate\tnum_epochs\tkeep_prob\tl2_reg_lambda\tdata_augmentation\tlearning_rate_decay_rate\tlearning_rate_decay_step\ttraining_time\tearly_stopping_epoch\taccuracy\ttimstamp\n")
+                file.write(f"{p.batch_size}\t{p.activation_function}\t{p.weight_initialization}\t{p.optimizer}\t{p.starter_learning_rate}\t{p.num_epochs}\t{p.keep_prob}\t{p.l2_reg_lambda}\t{p.data_augmentation}\t{p.learning_rate_decay_rate}\t{p.learning_rate_decay_step}\t{training_time}\t{early_stopping_epoch}\t{accuracy}\t{timestamp}\n")
 
 
 
