@@ -5,149 +5,161 @@ import datetime
 from tensorflow.keras.datasets.cifar10 import load_data
 import data_helpers as dh
 from lenet import LeNet
-import presets as ps
+from presets import Preset
+import math
 
 
-cp = ps.Preset(1)
-"""
-    모델별로 다르게 트레이닝 할 것
-        - Batch Size (int)
-        - Activation Function (string, default=relu)
-        - Weight Initialization Type (string, none="none")
-        - Optimizer (string, default=adam)
-        - (Start) Learning Rate (float, default=0.001)
-        - Epoch (int, default=200)
-        - Dropout (float, none=0.0)
-        - Weight Decay (float, none=?)
-        - Data Augmentation (bool, default=False)
-        - Learning Rate Decay (string, none="none")
-"""
-tf.flags.DEFINE_integer("batch_size", 128, "Batch Size (default: 64)")
-tf.flags.DEFINE_string("activation_function", 'relu', "Activation Function(default: ReLU)")
-tf.flags.DEFINE_string("weight_initialization", 'none', "Weigh Initialization")
-tf.flags.DEFINE_string("optimizer", 'adam', '')
-tf.flags.DEFINE_float("starter_learning_rate", cp.learning_rate, "Start Learning Rate (default=0.001)")
-tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_float("dropout", 0.0, "1 - keep_prob")
-# tf.flags.DEFINE_float("keep_prob", 0.9, "keep probability for dropout (default: 1.0)")
-tf.flags.DEFINE_float("weight_decay", 0.0, '')
-tf.flags.DEFINE_boolean("data_augmentation", True, "data augmentation option")
-tf.flags.DEFINE_float("learning_rate_decay_rate", 0.99, "")
-tf.flags.DEFINE_integer("learning_rate_decay_step", 100000, "")
+presets = [1, 2, 3, 4]
+for preset in presets:
+    p = Preset(preset)
 
-# Model Hyperparameters
-tf.flags.DEFINE_float("lr_decay", 0.99, "learning rate decay rate(default=0.1)")
-tf.flags.DEFINE_float("l2_reg_lambda", 0.0001, "L2 regularization lambda (default: 0.0)")
-tf.flags.DEFINE_integer("num_classes", 10, "The number of classes (default: 10)")
+    tf.flags.DEFINE_integer("batch_size", p.batch_size, "Batch Size (default: 64)")
+    tf.flags.DEFINE_string("activation_function", p.activation_function, "Activation Function(default: ReLU)")
+    if isinstance(p.weight_initialization, str):
+        tf.flags.DEFINE_string("weight_initialization", p.weight_initialization, "Weigh Initialization")
+    else:
+        tf.flags.DEFINE_float("weight_initialization", p.weight_initialization, "Weigh Initialization")
+    tf.flags.DEFINE_string("optimizer", p.optimizer, '')
+    tf.flags.DEFINE_float("starter_learning_rate", p.starter_learning_rate, "Start Learning Rate (default=0.001)")
+    tf.flags.DEFINE_integer("num_epochs", p.num_epochs, "Number of training epochs (default: 200)")
+    tf.flags.DEFINE_float("keep_prob", p.keep_prob, "keep probability for dropout (default: 1.0)")
+    tf.flags.DEFINE_float("l2_reg_lambda", p.l2_reg_lambda, "L2 regularization lambda (default: 0.0)")
+    tf.flags.DEFINE_boolean("data_augmentation", p.data_augmentation, "data augmentation option")
+    tf.flags.DEFINE_float("learning_rate_decay_rate", p.learning_rate_decay_rate, "Learning rate decay rate")
+    tf.flags.DEFINE_integer("learning_rate_decay_step", p.learning_rate_decay_step, "Learning rate decay step")
 
-# Training parameters
-tf.flags.DEFINE_integer("evaluate_every", 350, "Evaluate model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 350, "Save model after this many steps (default: 100)")
-tf.flags.DEFINE_integer("num_checkpoints", 3, "Number of checkpoints to store (default: 5)")
+    tf.flags.DEFINE_integer("num_classes", 10, "The number of classes (default: 10)")
+    tf.flags.DEFINE_integer("SEED", p.SEED, "SEED")
 
-# Misc Parameters
-tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
-tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
-FLAGS = tf.flags.FLAGS
+    # Training parameters
+    tf.flags.DEFINE_integer("evaluate_every", 350, "Evaluate model on dev set after this many steps (default: 100)")
+    tf.flags.DEFINE_integer("checkpoint_every", 350, "Save model after this many steps (default: 100)")
+    tf.flags.DEFINE_integer("num_checkpoints", 3, "Number of checkpoints to store (default: 5)")
 
-(x_train_val, y_train_val), (x_test, y_test) = load_data() # training data: 50000, test data: 10000
-x_train, y_train, x_test, y_test, x_val, y_val = dh.shuffle_data(x_train_val, y_train_val, x_test, y_test, FLAGS.num_classes)
-with tf.Graph().as_default():
-    session_conf = tf.ConfigProto(
-      allow_soft_placement=FLAGS.allow_soft_placement,
-      log_device_placement=FLAGS.log_device_placement)
-    sess = tf.Session(config=session_conf)
-    with sess.as_default():
-        lenet = LeNet(FLAGS) #LeNet 클래스의 인스턴스 생성 후 Hyperparameter가 정의돼 있는 FLAGS로 초기화
+    # Misc Parameters
+    tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
+    tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+    FLAGS = tf.flags.FLAGS
 
-        # Define Training procedure
-        # * hint learning rate decay를 위한 operation을 통해 감쇠된 learning rate를 optimizer에 적용
-        learning_rate = FLAGS.starter_learning_rate # Learning rate decay가 적용되지 않는다면 Starter learning rate값이 그대로 전달됨
-        if FLAGS.learning_rate_decay != 1:
+    (x_train_val, y_train_val), (x_test, y_test) = load_data() # training data: 50000, test data: 10000
+    x_train, y_train, x_test, y_test, x_val, y_val = dh.shuffle_data(x_train_val, y_train_val, x_test, y_test, FLAGS.num_classes)
+    with tf.Graph().as_default():
+        session_conf = tf.ConfigProto(
+          allow_soft_placement=FLAGS.allow_soft_placement,
+          log_device_placement=FLAGS.log_device_placement)
+        sess = tf.Session(config=session_conf)
+        with sess.as_default():
+            lenet = LeNet(FLAGS)
+
+            # Define Training procedure
+            # * hint learning rate decay를 위한 operation을 통해 감쇠된 learning rate를 optimizer에 적용
+            learning_rate = FLAGS.starter_learning_rate # Learning rate decay가 적용되지 않는다면 Starter learning rate값이 그대로 전달됨
             global_step = tf.Variable(0, name="global_step", trainable=False)  # iteration 수
-            learning_rate =  learning_rate * FLAGS.learning_rate_decay_rate ** (global_step/FLAGS.learning_rate_decay_step)
-            learning_rate = tf.train.exponential_decay(
-                learning_rate=learning_rate, # base learning rate
-                global_step=global_step, # current index into the dataset
-                decay_steps=FLAGS.learning_rate_decay_step, # train size
-                decay_rate=FLAGS.learning_rate_decay_rate, # decay rate
-                staircase=True)
+            if FLAGS.learning_rate_decay_rate != 1:
+                learning_rate =  learning_rate * FLAGS.learning_rate_decay_rate ** (global_step/FLAGS.learning_rate_decay_step)
+                # learning_rate = tf.train.exponential_decay(
+                #     learning_rate=learning_rate, # base learning rate
+                #     global_step=global_step, # current index into the dataset
+                #     decay_steps=FLAGS.learning_rate_decay_step, # train size
+                #     decay_rate=FLAGS.learning_rate_decay_rate, # decay rate
+                #     staircase=True)
+            if FLAGS.optimizer == 'adam':
+                optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate) #Optimizer
+            elif FLAGS.optimizer == 'adagrad':
+                optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
+            grads_and_vars = optimizer.compute_gradients(lenet.loss) # gradient 계산
+            train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step) # back-propagation
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate) #Optimizer
-        grads_and_vars = optimizer.compute_gradients(lenet.loss) # gradient 계산
-        train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step) # back-propagation
+            # Output directory for models and summaries
+            timestamp = str(int(time.time()))
+            out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
+            print(f"Writing to {out_dir}\n")
 
-        # Output directory for models and summaries
-        timestamp = str(int(time.time()))
-        out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
-        print(f"Writing to {out_dir}\n")
+            # Summaries for loss and accuracy
+            loss_summary = tf.summary.scalar("loss", lenet.loss)
+            acc_summary = tf.summary.scalar("accuracy", lenet.accuracy)
 
-        # Summaries for loss and accuracy
-        loss_summary = tf.summary.scalar("loss", lenet.loss)
-        acc_summary = tf.summary.scalar("accuracy", lenet.accuracy)
+            # Train Summaries
+            train_summary_op = tf.summary.merge([loss_summary, acc_summary])
+            train_summary_dir = os.path.join(out_dir, "summaries", "train")
+            train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
 
-        # Train Summaries
-        train_summary_op = tf.summary.merge([loss_summary, acc_summary])
-        train_summary_dir = os.path.join(out_dir, "summaries", "train")
-        train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
+            # Dev summaries
+            dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
+            dev_summary_dir = os.path.join(out_dir, "summaries", "dev")
+            dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, sess.graph)
 
-        # Dev summaries
-        dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
-        dev_summary_dir = os.path.join(out_dir, "summaries", "dev")
-        dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, sess.graph)
+            # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
+            checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
+            checkpoint_prefix = os.path.join(checkpoint_dir, "model")
+            if not os.path.exists(checkpoint_dir):
+                os.makedirs(checkpoint_dir)
+            saver = tf.train.Saver(tf.global_variables(), max_to_keep=FLAGS.num_checkpoints)
 
-        # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
-        checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
-        checkpoint_prefix = os.path.join(checkpoint_dir, "model")
-        if not os.path.exists(checkpoint_dir):
-            os.makedirs(checkpoint_dir)
-        saver = tf.train.Saver(tf.global_variables(), max_to_keep=FLAGS.num_checkpoints)
+            sess.run(tf.global_variables_initializer()) # 모든 가중치 초기화
 
-        sess.run(tf.global_variables_initializer()) # 모든 가중치 초기화
+            def train_step(_x_batch, _y_batch):
 
-        def train_step(_x_batch, _y_batch):
-            feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: FLAGS.keep_prob}
-            # * hint learning rate decay operation 실행
-            _, step, summaries, loss, accuracy, learning_rate_dc = sess.run([train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy, learning_rate], feed_dict)
-            time_str = datetime.datetime.now().isoformat()
-            # print(f"{time_str}: step {step}, loss {loss}, acc {:g}".format(time_str, step, loss, accuracy))
-            print(f"{time_str}: step {step}, dc_lr {learning_rate_dc}, loss {loss}, acc {accuracy}")
-            train_summary_writer.add_summary(summaries, step)
+                filename = f"./INFOS/log_train.txt"
+                file = open(filename, 'a')
 
-        def dev_step(_x_batch, _y_batch, writer=None):
-            """
-            Evaluates model on a dev set
-            """
-            feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: 1.0}
-            step, summaries, loss, accuracy = sess.run([global_step, dev_summary_op, lenet.loss, lenet.accuracy], feed_dict)
-            time_str = datetime.datetime.now().isoformat()
-            print(f"{time_str}: step {step}, loss {loss}, acc {accuracy}")
-            # print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
-            if writer:
-                writer.add_summary(summaries, step)
-            return accuracy
+                feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: FLAGS.keep_prob}
+                # * hint learning rate decay operation 실행
+                learning_rate_dc = FLAGS.starter_learning_rate
+                if FLAGS.learning_rate_decay_rate == 1:
+                    _, step, summaries, loss, accuracy = sess.run([train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy], feed_dict)
+                else:
+                    _, step, summaries, loss, accuracy, learning_rate_dc = sess.run([train_op, global_step, train_summary_op, lenet.loss, lenet.accuracy, learning_rate], feed_dict)
 
-        # Generate batches
-        if FLAGS.data_augmentation: # data augmentation 적용시
-            batches = dh.batch_iter_aug(x_train, y_train, FLAGS.batch_size, FLAGS.num_epochs)
-        else:
-            batches = dh.batch_iter(x_train, y_train, FLAGS.batch_size, FLAGS.num_epochs)
+                time_str = datetime.datetime.now().strftime("%m/%d %H:%M:%S")
+                prog = FLAGS.num_epochs * math.ceil(45000/FLAGS.batch_size)
+                print(f"Preset={preset}  [{time_str}]  Step=({format(step, '05')}/{format(prog, '05')})  Loss={format(loss, '<8g')}  Acc={format(accuracy, '<9g')}  LR={format(learning_rate_dc, '<21g')}")
+                file.write(f"{preset}  {time_str}  {format(step, '05')}/{format(prog, '05')}  {format(loss, '<8g')}  {format(accuracy, '<9g')}  {format(learning_rate_dc, '<21g')}")
+                train_summary_writer.add_summary(summaries, step)
+                file.close()
 
-        # Training loop. For each batch...
-        max = 0
-        start_time = time.time()
-        for batch in batches: # len(batches) = (45000/batch size) * epoch 수
-            x_batch, y_batch = zip(*batch) # batch size 단위로 input과 정답 리턴, e.g., (128, 32, 32, 3), (128, 10),
-            train_step(x_batch, y_batch)
-            current_step = tf.train.global_step(sess, global_step)
-            if current_step % FLAGS.evaluate_every == 0: # 특정 iteration 마다
-                print("\nEvaluation:")
-                accuracy = dev_step(x_val, y_val, writer=dev_summary_writer) # validation accuracy 확인
-                print("")
-                if accuracy > max: # validation accuracy가 경신될 때
-                    max = accuracy
-                    path = saver.save(sess, checkpoint_prefix, global_step=current_step) # best accuracy에 도달할 때만 모델을 저장함으로써 early stopping
-                    print(f"Saved model checkpoint to {path}\n")
-        training_time = (time.time() - start_time) / 60
-        print(f'training time: {training_time}')
+            def dev_step(_x_batch, _y_batch, writer=None):
+                """
+                Evaluates model on a dev set
+                """
+                feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: 1.0}
+                step, summaries, loss, accuracy = sess.run([global_step, dev_summary_op, lenet.loss, lenet.accuracy], feed_dict)
+                time_str = datetime.datetime.now().isoformat()
+                print(f"[{time_str}]  Step={format(step, '05')}  Loss={format(loss, '<8g')}  Acc={format(accuracy, '<9g')}")
+                if writer:
+                    writer.add_summary(summaries, step)
+                return accuracy
+
+            # Generate batches
+            if FLAGS.data_augmentation: # data augmentation 적용시
+                batches = dh.batch_iter_aug(x_train, y_train, FLAGS.batch_size, FLAGS.num_epochs)
+            else:
+                batches = dh.batch_iter(x_train, y_train, FLAGS.batch_size, FLAGS.num_epochs)
+
+            # Training loop. For each batch...
+            max = 0
+            start_time = time.time()
+
+
+            for batch in batches: # len(batches) = (45000/batch size) * epoch 수
+                x_batch, y_batch = zip(*batch) # batch size 단위로 input과 정답 리턴, e.g., (128, 32, 32, 3), (128, 10),
+                train_step(x_batch, y_batch)
+                current_step = tf.train.global_step(sess, global_step)
+                if current_step % FLAGS.evaluate_every == 0: # 특정 iteration 마다
+                    print("\n>> Evaluation:")
+                    accuracy = dev_step(x_val, y_val, writer=dev_summary_writer) # validation accuracy 확인
+                    print("")
+                    if accuracy > max: # validation accuracy가 경신될 때
+                        max = accuracy
+                        path = saver.save(sess, checkpoint_prefix, global_step=current_step) # best accuracy에 도달할 때만 모델을 저장함으로써 early stopping
+                        print(f"> Saved model checkpoint to {path}\n")
+            training_time = (time.time() - start_time) / 60
+            print(f'>> Training time: {training_time}')
+            filename ='./INFOS/train_result.txt'
+            with open(filename, 'a') as file:
+                if os.path.getsize(filename) == 0:
+                    file.write("batch_size\tactivation_function\tweight__initialization\toptimizer\tstarter_learning_rate\tnum_epochs\tkeep_prob\tl2_reg_lambda\tdata_augmentation\tlearning_rate_decay_rate\tlearning_rate_decay_step")
+                file.write(f"{p.batch_size}\t{p.activation_function}\t{p.weight_initialization}\t{p.optimizer}\t{p.starter_learning_rate}\t{p.num_epochs}\t{p.keep_prob}\t{p.l2_reg_lambda}\t{p.data_augmentation}\t{p.learning_rate_decay_rate}\t{p.learning_rate_decay_step}")
+
+
 
