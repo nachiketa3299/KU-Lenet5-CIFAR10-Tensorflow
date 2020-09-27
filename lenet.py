@@ -2,23 +2,6 @@ import tensorflow as tf
 import numpy as np
 import math
 
-# lenet = LeNet(FLAG)로 초기화 됨.
-'''
-- learning rate (default = 0.1)
-- learning rate decay rate (default = 0.1)
-- L2 Regularization lambda (default = 0.1)
-- dropout: keep_prob (default = 1.0)
-- number of classes (default = 10)
-
-- batch_size (default = 64)
-- num_epoch (default = 200)
-- evaluate_every: evaluate model on dev set after this many steps (default = 100)
-- num_checkpoints: number of checkpoints to store (default = 5)
-- data_augmentation (default = True)
-
-- allow soft placement = True
-- log device placement = False
-'''
 class LeNet:
     def __init__(self, config):
         tf.set_random_seed(config.SEED)
@@ -29,33 +12,10 @@ class LeNet:
 
         self.X = tf.placeholder(tf.float32, [None, 32, 32, 3], name="X")
         self.Y = tf.placeholder(tf.float32, [None, self._num_classes], name="Y")
+
         # Dropout 적용시 살릴 확률
         self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
 
-        # Weight Initialization
-        # self.initializer = None
-        # stddev_fun = None
-        # if config.weight_initialization == 'xe':
-        #     stddev_fun = lambda n : math.sqrt(1 / n)
-        #
-        # elif config.weight_initialization == 'he':
-        #     stddev_fun = lambda n : math.sqrt(2 / n) # n is filter size * filter size * out channel
-        # else:
-        #     self.initializer = tf.random_normal_initializer(stddev=config.weight_initialization)
-        #
-        # if config.weight_initialization == 'xe' or config.weight_initialization == 'he':
-        #     self.initializer = []
-        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(32 * 32 * 3)))
-        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(14 * 14 * 6)))
-        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(5 * 5 * 16)))
-        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(120)))
-        #     self.initializer.append(tf.random_normal_initializer(stddev=stddev_fun(84)))
-        # else:
-        #     self.conv_f1 = tf.get_variable(name='conv_f1', shape=[5, 5, 3, 6], initializer=self.initializer)
-        #     self.conv_f2 = tf.get_variable(name='conv_f2', shape=[5, 5, 6, 16], initializer=self.initializer)
-        #     self.FCW1 = tf.get_variable(name="FCW1", shape=[5 * 5 * 16, 120], initializer=self.initializer)
-        #     self.FCW2 = tf.get_variable(name="FCW2", shape=[120, 84], initializer=self.initializer)
-        #     self.FCW3 = tf.get_variable(name="FCW3", shape=[84, 10], initializer=self.initializer)
         init = None
         if config.weight_initialization == 'xe':
             init = tf.contrib.layers.xavier_initializer()
@@ -121,24 +81,6 @@ class LeNet:
             self.FC2 = tf.nn.sigmoid(self.FC2)
         self.FC3 = tf.nn.dropout(self.FC2, keep_prob=config.keep_prob, name="FC3")
 
-        ############# for debug ##############
-        # print('- X      ', self.X.shape)
-        # print('- conv_f1', self.conv_f1.shape)
-        # print('- C1     ', self.C1.shape)
-        # print('- S2     ', self.S2.shape)
-        # print('- conv_f2', self.conv_f2.shape)
-        # print('- C3     ', self.C3.shape)
-        # print('- S4     ', self.S4.shape)
-        # print('- FC1    ', self.FC1.shape)
-        # print('- FCW1   ', self.FCW1.shape)
-        # print('- FCB1   ', self.FCB1.shape)
-        # print('- FC2    ', self.FC2.shape)
-        # print('- FCW2   ', self.FCW2.shape)
-        # print('- FCB2   ', self.FCB2.shape)
-        # print('- FC3    ', self.FC3.shape)
-        # print('- FCW3   ', self.FCW3.shape)
-        # print('- FCB3   ', self.FCB3.shape)
-        ######################################
         hypothesis = tf.nn.softmax(tf.nn.xw_plus_b(self.FC3, self.FCW3, self.FCB3, name="hypothesis"))
 
         with tf.variable_scope('logit'):

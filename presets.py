@@ -43,7 +43,7 @@ class Preset:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.94, 5000)
         elif preset_num == 7:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.92, 5000)
-        # current best
+        # first best
         elif preset_num == 8:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.90, 5000)
         elif preset_num == 9:
@@ -58,6 +58,32 @@ class Preset:
         elif preset_num == 12:
             setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, True, 0.90, 5000)
 
+        # epoch
+        elif preset_num == 13:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 200, 0.9, 0.0001, True, 0.90, 5000)
 
+        # dropout not epoch
+        # second best
+        elif preset_num == 14:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.95, 0.0001, True, 0.90, 5000)
+        # batch size
+        elif preset_num == 15:
+            setParameters(256, 'relu', 'he', 'adam', 0.001, 100, 0.95, 0.0001, True, 0.90, 5000)
 
+        # Weight Decay
+        elif preset_num == 16:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.95, 0.00001, True, 0.90, 5000)
+
+        # Starter Learning Rate
+        elif preset_num == 17:
+            setParameters(128, 'relu', 'he', 'adam', 0.0001, 100, 0.95, 0.0001, True, 0.90, 5000)
+        elif preset_num == 18:
+            setParameters(128, 'relu', 'he', 'adam', 0.01, 100, 0.95, 0.0001, True, 0.90, 5000)
+        # Batch Size & Epoch
+        elif preset_num == 19:
+            setParameters(256, 'relu', 'he', 'adam', 0.001, 200, 0.95, 0.0001, True, 0.90, 5000)
+
+        # Second best epoch double
+        elif preset_num == 20:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 200, 0.95, 0.0001, True, 0.90, 5000)
 

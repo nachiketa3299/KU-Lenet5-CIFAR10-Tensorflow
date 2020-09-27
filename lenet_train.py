@@ -15,12 +15,13 @@ def del_all_flags(_FLAGS):
         _FLAGS.__delattr__(keys)
 
 
-presets = [11, 12]
+presets = list(range(1, 21))
 for preset in presets:
     p = Preset(preset)
     del_all_flags(tf.flags.FLAGS)
     tf.reset_default_graph()
 
+    tf.flags.DEFINE_integer("SEED", p.SEED, '')
     tf.flags.DEFINE_integer("batch_size", p.batch_size, "Batch Size (default: 64)")
     tf.flags.DEFINE_string("activation_function", p.activation_function, "Activation Function(default: ReLU)")
     if isinstance(p.weight_initialization, str):
@@ -37,7 +38,6 @@ for preset in presets:
     tf.flags.DEFINE_integer("learning_rate_decay_step", p.learning_rate_decay_step, "Learning rate decay step")
 
     tf.flags.DEFINE_integer("num_classes", 10, "The number of classes (default: 10)")
-    tf.flags.DEFINE_integer("SEED", p.SEED, "SEED")
 
     # Training parameters
     tf.flags.DEFINE_integer("evaluate_every", 350, "Evaluate model on dev set after this many steps (default: 100)")
@@ -65,12 +65,6 @@ for preset in presets:
             global_step = tf.Variable(0, name="global_step", trainable=False)  # iteration 수
             if FLAGS.learning_rate_decay_rate != 1:
                 learning_rate =  learning_rate * FLAGS.learning_rate_decay_rate ** (global_step/FLAGS.learning_rate_decay_step)
-                # learning_rate = tf.train.exponential_decay(
-                #     learning_rate=learning_rate, # base learning rate
-                #     global_step=global_step, # current index into the dataset
-                #     decay_steps=FLAGS.learning_rate_decay_step, # train size
-                #     decay_rate=FLAGS.learning_rate_decay_rate, # decay rate
-                #     staircase=True)
             if FLAGS.optimizer == 'adam':
                 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate) #Optimizer
             elif FLAGS.optimizer == 'adagrad':
@@ -107,10 +101,6 @@ for preset in presets:
             sess.run(tf.global_variables_initializer()) # 모든 가중치 초기화
 
             def train_step(_x_batch, _y_batch):
-
-                # filename = f"./INFOS/log_train.txt"
-                # file = open(filename, 'a')
-
                 feed_dict = {lenet.X: _x_batch, lenet.Y: _y_batch, lenet.keep_prob: FLAGS.keep_prob}
                 # * hint learning rate decay operation 실행
                 learning_rate_dc = FLAGS.starter_learning_rate
@@ -122,9 +112,7 @@ for preset in presets:
                 time_str = datetime.datetime.now().strftime("%m/%d %H:%M:%S")
                 prog = FLAGS.num_epochs * math.ceil(45000/FLAGS.batch_size)
                 print(f"Preset={preset}  [{time_str}]  Step=({format(step, '05')}/{format(prog, '05')})  Loss={format(loss, '<8g')}  Acc={format(accuracy, '<9g')}  LR={format(learning_rate_dc, '<21g')}")
-                # file.write(f"{preset}  {time_str}  {format(step, '05')}/{format(prog, '05')}  {format(loss, '<8g')}  {format(accuracy, '<9g')}  {format(learning_rate_dc, '<21g')}")
                 train_summary_writer.add_summary(summaries, step)
-                # file.close()
 
             def dev_step(_x_batch, _y_batch, writer=None):
                 """
