@@ -33,12 +33,30 @@ class Preset:
             setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, False, 1.0, 0)
         elif preset_num == 3:
             setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, True, 1.0, 0)
+
+        ## learning_rate_decay_rate
         elif preset_num == 4:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.96, 5000)
         elif preset_num == 5:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.98, 5000)
         elif preset_num == 6:
             setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.94, 5000)
+        elif preset_num == 7:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.92, 5000)
+        # current best
+        elif preset_num == 8:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.90, 5000)
+        elif preset_num == 9:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.88, 5000)
+        ## learning_rate_decay_step
+        elif preset_num == 10:
+            setParameters(128, 'relu', 'he', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.90, 10000)
+
+        # weight initialization method
+        elif preset_num == 11:
+            setParameters(128, 'relu', 'xe', 'adam', 0.001, 100, 0.9, 0.0001, True, 0.90, 5000)
+        elif preset_num == 12:
+            setParameters(128, 'relu', 0.01, 'adam', 0.001, 100, 0.9, 0.0001, True, 0.90, 5000)
 
 
 

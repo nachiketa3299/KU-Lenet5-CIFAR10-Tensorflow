@@ -58,7 +58,7 @@ class LeNet:
         #     self.FCW3 = tf.get_variable(name="FCW3", shape=[84, 10], initializer=self.initializer)
         init = None
         if config.weight_initialization == 'xe':
-            init = tf.contrib.layers.xavier_initilizer()
+            init = tf.contrib.layers.xavier_initializer()
         elif config.weight_initialization == 'he':
             init = tf.contrib.layers.variance_scaling_initializer()
         else:
